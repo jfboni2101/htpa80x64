@@ -96,7 +96,7 @@ class Imshow(RThread):
         self.num_pix = len(self.tparray._pix)
 
         self.window_name = kwargs.pop('window_name', 'Sensor stream')
-
+        self.cap = cv2.VideoCapture(0)
         # Call parent class
         super().__init__(target=self._target_function,
                          read_buffer=read_buffer,
@@ -134,7 +134,23 @@ class Imshow(RThread):
         while self._exit == False:
 
             # Execute target function
-            frame, bboxes = self._target()
+            frame1, bboxes = self._target_function()
+            ret, frame2 = self.cap.read()
+            frame2 = cv2.flip(frame2, 1)
+            if frame1 is None or frame2 is None:
+                print("Uno dei frame è None.")
+                break
+            if len(frame1.shape) == 2:  # Immagine in scala di grigi
+                frame1 = cv2.cvtColor(frame1, cv2.COLOR_GRAY2BGR)
+            if len(frame2.shape) != 3 or frame2.shape[2] != 3:
+                print("Frame2 non è un'immagine a colori.")
+                break
+            if frame1.shape[0] != frame2.shape[0] or frame1.shape[1] != frame2.shape[1]:
+                frame2 = cv2.resize(frame2, (frame1.shape[1], frame1.shape[0]), interpolation=cv2.INTER_LINEAR)
+            if frame1.shape[2] != frame2.shape[2]:
+                print("Errore: le immagini non hanno lo stesso numero di canali")
+                break
+            overlaid_frame = cv2.addWeighted(frame1, 0.7, frame2, 0.3, 0)
 
             # Add a rectangle for every box
             for b in bboxes.index:
@@ -144,9 +160,9 @@ class Imshow(RThread):
                 w = box['xbr'].item() - box['xtl'].item()
                 h = box['ybr'].item() - box['ytl'].item()
 
-                frame = cv2.rectangle(frame, (x, y), (x + w, y + h), 1, 1)
+                overlaid_frame = cv2.rectangle(overlaid_frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
-            cv2.imshow(self.window_name, frame)
+            cv2.imshow(self.window_name, overlaid_frame)
             cv2.waitKey(1)
 
         # The opencv window needs to be closed inside the run function,
