@@ -13,6 +13,7 @@ import pandas as pd
 from threads_base import WThread, RThread
 from readers import HTPA_UDPReader
 from tparray import TPArray
+from ultralytics import YOLO
 
 
 class UDP(WThread):
@@ -97,6 +98,7 @@ class Imshow(RThread):
 
         self.window_name = kwargs.pop('window_name', 'Sensor stream')
         self.cap = cv2.VideoCapture(0)
+
         # Call parent class
         super().__init__(target=self._target_function,
                          read_buffer=read_buffer,
@@ -117,6 +119,9 @@ class Imshow(RThread):
         frame = cv2.normalize(frame, frame, 0, 255, cv2.NORM_MINMAX)
         frame = frame.astype(np.uint8)
 
+        # Apply colormap to frame
+        frame = cv2.applyColorMap(frame, cv2.COLORMAP_JET)
+
         # Get bounding boxes
         try:
             bboxes = upstream_dict['bboxes']
@@ -130,7 +135,7 @@ class Imshow(RThread):
     def run(self):
 
         cv2.namedWindow(self.window_name, cv2.WINDOW_NORMAL)
-
+        model = YOLO("yolov8n.pt")
         while self._exit == False:
 
             # Execute target function
@@ -146,11 +151,10 @@ class Imshow(RThread):
                 print("Frame2 non è un'immagine a colori.")
                 break
             if frame1.shape[0] != frame2.shape[0] or frame1.shape[1] != frame2.shape[1]:
-                frame2 = cv2.resize(frame2, (frame1.shape[1], frame1.shape[0]), interpolation=cv2.INTER_LINEAR)
+                frame1 = cv2.resize(frame1, (frame2.shape[1], frame2.shape[0]), interpolation=cv2.INTER_LINEAR)
             if frame1.shape[2] != frame2.shape[2]:
                 print("Errore: le immagini non hanno lo stesso numero di canali")
                 break
-            overlaid_frame = cv2.addWeighted(frame1, 0.7, frame2, 0.3, 0)
 
             # Add a rectangle for every box
             for b in bboxes.index:
@@ -160,8 +164,13 @@ class Imshow(RThread):
                 w = box['xbr'].item() - box['xtl'].item()
                 h = box['ybr'].item() - box['ytl'].item()
 
-                overlaid_frame = cv2.rectangle(overlaid_frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                frame1 = cv2.rectangle(frame1, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            # Do tracking on normal camera
+            result = model.track(frame2, persist=True)
+            annotated_frame = result[0].plot()
 
+            # Overlaid frame of thermal camera and normal camera
+            overlaid_frame = cv2.addWeighted(frame1, 0.4, annotated_frame, 0.6, 0)
             cv2.imshow(self.window_name, overlaid_frame)
             cv2.waitKey(1)
 
