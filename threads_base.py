@@ -27,7 +27,8 @@ class RWThread(Thread):
     def run(self):
         while self._exit == False:
             # Execute target function
-            result = self._target()
+            #result = self._target() --> Credo sia sbagliato allora ho corretto
+            result = self._target_function()
 
             # Write result to buffer
             self.write_buffer.put(result)
@@ -57,7 +58,8 @@ class WThread(Thread):
     def run(self):
         while self._exit == False:
             # Execute target function
-            result = self._target()
+            #result = self._target()
+            result = self._target_function()
 
             # Write result to buffer
             self.write_buffer.put(result)
@@ -65,7 +67,8 @@ class WThread(Thread):
     def _target_function(self):
         print('You need to overwrite this method in the child class.')
         # Get result from upstream thread
-        upstream_dict = self.read_buffer.get()
+        #upstream_dict = self.read_buffer.get() --> Credo sia sbagliato allora ho corretto
+        upstream_dict = self.write_buffer.get()
 
         return upstream_dict
 
@@ -87,7 +90,8 @@ class RThread(Thread):
     def run(self):
         while self._exit == False:
             # Execute target function
-            result = self._target()
+            #result = self._target() --> Credo sia sbagliato allora ho corretto
+            result = self._target_function()
 
     def _target_function(self):
         print('You need to overwrite this method in the child class.')

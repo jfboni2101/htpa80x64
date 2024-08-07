@@ -64,7 +64,7 @@ class UDP(WThread):
                          **kwargs)
 
     def _target_function(self):
-        # print('Executed upd thread: ' + str(time.time()-self.t0) )
+        # print('Executed udp thread: ' + str(time.time()-self.t0) )
 
         frame = self.udp_reader.read_continuous_bytestream(self.dev_id)
 

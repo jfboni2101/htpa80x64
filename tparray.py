@@ -5,7 +5,7 @@ Created on Wed Jun 21 11:16:48 2023
 @author: Rehmer
 """
 import numpy as np
-import ctypes
+#import ctypes
 import pandas as pd
 import json
 from pathlib import Path
@@ -29,42 +29,7 @@ class TPArray():
         # Calculate order of data in bds file
         DevConst = {}
 
-        if (self.width, self.height) == (8, 8):
-            DevConst['ATCaddr'] = 0
-            DevConst['NROFBLOCKS'] = 1
-            DevConst['NROFPTAT'] = 1
-
-            self._package_num = 1
-            self._package_size = 262
-            self._fs = 160
-            self._NETD = 100
-
-        elif (self.width, self.height) == (16, 16):
-            DevConst['ATCaddr'] = 0
-            DevConst['NROFBLOCKS'] = 2
-            DevConst['NROFPTAT'] = 2
-
-            self._package_num = 1
-            self._package_size = 780
-            self._fs = 70
-            self._NETD = 130
-
-        elif (self.width, self.height) == (32, 32):
-            DevConst['ATCaddr'] = 0
-            DevConst['NROFBLOCKS'] = 4
-            DevConst['NROFPTAT'] = 2
-
-            self._package_num = 2
-            self._package_size = 1292
-            self._fs = 27
-            self._NETD = 140
-
-            # path to array data
-            path = Path(__file__).parent / 'arraytypes' / '32x32.json'
-            # Load calibration data from file
-            self._load_calib_json(path)
-
-        elif (self.width, self.height) == (80, 64):
+        if (self.width, self.height) == (80, 64):
             DevConst['NROFBLOCKS'] = 4
             DevConst['NROFPTAT'] = 2
             DevConst['ATCaddr'] = 0
@@ -78,78 +43,11 @@ class TPArray():
             path = '80x64.jason'
             # Load calibration data from file
             self._load_calib_json(path)
-
-        elif (self.width, self.height) == (60, 84):
-            DevConst['NROFBLOCKS'] = 7
-            DevConst['NROFPTAT'] = 2
-            DevConst['ATCaddr'] = 0
-
-            self._package_num = 10
-            self._package_size = 1283
-            self._fs = 41
-            self._NETD = 70
-
-            # path to array data
-            path = Path(__file__).parent / 'arraytypes' / '60x84.json'
-            # Load calibration data from file
-            self._load_calib_json(path)
-
-        elif (self.width, self.height) == (120, 84):
-            DevConst['ATCaddr'] = 0
-            DevConst['NROFBLOCKS'] = 6
-            DevConst['NROFPTAT'] = 2
-
-            self._package_num = 17
-            self._package_size = 1401
-            self._fs = 20
-            self._NETD = 130
-            r_lim = 60
-
-            self._mask = self._binary_mask(r_lim)
-
-            # path to array data
-            path = Path(__file__).parent / 'arraytypes' / '120x84.json'
-            # Load calibration data from file
-            self._load_calib_json(path)
-
-        elif (self.width, self.height) == (60, 40):
-            DevConst['ATCaddr'] = 1
-            DevConst['NROFBLOCKS'] = 5
-            DevConst['NROFPTAT'] = 2
-
-            self._package_num = 5
-            self._package_size = 1159
-            self._fs = 47
-            self._NETD = 90
-
-            self._mask = np.ones(self._npsize)
-
-            # path to array data
-            path = Path(__file__).parent / 'arraytypes' / '60x40.json'
-            # Load calibration data from file
-            self._load_calib_json(path)
-
-        elif (self.width, self.height) == (160, 120):
-            DevConst['ATCaddr'] = 1
-            DevConst['NROFBLOCKS'] = 12
-            DevConst['NROFPTAT'] = 2
-
-            self._package_num = 30
-            self._package_size = 1401
-            self._fs = 25
-            self._NETD = 110
-
-            # path to array data
-            path = Path(__file__).parent / 'arraytypes' / '160x120.json'
-            # Load calibration data from file
-            self._load_calib_json(path)
-
         else:
             raise Exception('This Thermopile Array is not known.')
 
-            # Remaining DevConst can be derived
-        DevConst['VDDaddr'] = \
-            int(self.width * self.height + self.height / DevConst['NROFBLOCKS'] * self.width)
+        # Remaining DevConst can be derived
+        DevConst['VDDaddr'] = int(self.width * self.height + self.height / DevConst['NROFBLOCKS'] * self.width)
 
         DevConst['TAaddr'] = DevConst['VDDaddr'] + 1
         DevConst['PTaddr'] = DevConst['TAaddr'] + 1
@@ -168,12 +66,10 @@ class TPArray():
         e_off = ['e_off' + str(e) for e in range(0, no_e_off)]
 
         # voltage
-        vdd = ['Vdd' + str(v) for v in range(0,
-                                             DevConst['TAaddr'] - DevConst['VDDaddr'])]
+        vdd = ['Vdd' + str(v) for v in range(0, DevConst['TAaddr'] - DevConst['VDDaddr'])]
 
         # ambient temperature
-        T_amb = ['Tamb' + str(t) for t in range(0,
-                                                DevConst['PTaddr'] - DevConst['TAaddr'])]
+        T_amb = ['Tamb' + str(t) for t in range(0, DevConst['PTaddr'] - DevConst['TAaddr'])]
 
         # PTAT
         no_ptat = int(DevConst['NROFBLOCKS'] * DevConst['NROFPTAT'])
@@ -306,7 +202,7 @@ class TPArray():
 
             # Read and convert data according to provided json file
         for key in ee.keys():
-            # Ge start and stop indices from addresses
+            # Get start and stop indices from addresses
             idx_start = int(ee[key]['adr_start'], 0)
             idx_stop = int(ee[key]['adr_stop'], 0) + 1
 

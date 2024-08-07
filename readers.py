@@ -5,20 +5,14 @@ Created on Thu Feb  8 16:08:22 2024
 @author: rehmer
 """
 
-import os
 import re
-import shutil
 import socket
-import subprocess
 import time
-from pathlib import Path
 
-import matplotlib
 import numpy as np
 import pandas as pd
 
 from tparray import TPArray
-
 
 
 class HTPA_ByteStream_Converter():
