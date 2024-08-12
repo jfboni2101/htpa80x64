@@ -170,7 +170,7 @@ class Imshow(RThread):
             annotated_frame = result[0].plot()
 
             # Overlaid frame of thermal camera and normal camera
-            overlaid_frame = cv2.addWeighted(frame1, 0.4, annotated_frame, 0.6, 0)
+            overlaid_frame = cv2.addWeighted(frame1, 0.3, annotated_frame, 0.7, 0)
             cv2.imshow(self.window_name, overlaid_frame)
             cv2.waitKey(1)
 
