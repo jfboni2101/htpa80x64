@@ -35,6 +35,8 @@ class HTPA_ByteStream_Converter():
             self.convert = self._bytes_to_np
         elif self.output == 'pd':
             self.convert = self._bytes_to_pd
+        elif self.output == 'img':
+            self.convert = self._bytes_to_pd
 
     def _bytes_to_np(self, byte_stream: list):
 
@@ -73,22 +75,22 @@ class HTPA_ByteStream_Converter():
 
         return df_data
 
-    # def bytes_to_img(self,byte_stream):
+    def _bytes_to_img(self,byte_stream):
 
-    #     # Loop over all bytes and combine MSB and LSB
-    #     idx = np.arange(0,len(byte_stream),2)
+        # Loop over all bytes and combine MSB and LSB
+        idx = np.arange(0,len(byte_stream),2)
 
-    #     img = np.zeros((1,self.width*self.height))
-    #     j=0
+        img = np.zeros((1,self.width*self.height))
+        j=0
 
-    #     for i in idx:
-    #         img[0,j] = int.from_bytes(byte_stream[i:i+2], byteorder='little')
-    #         j = j+1
+        for i in idx:
+            img[0,j] = int.from_bytes(byte_stream[i:i+2], byteorder='little')
+            j = j+1
 
-    #     img = img.reshape((self.height,self.width))
-    #     img = np.flip(img,axis=1)
+        img = img.reshape((self.height,self.width))
+        img = np.flip(img,axis=1)
 
-    #     return img
+        return img
 
 
 class HTPA_UDPReader():
