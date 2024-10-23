@@ -48,6 +48,3 @@ if __name__ == '__main__':
         time.sleep(120)
         udp_thread.stop()
         plot_thread.stop()
-
-
-

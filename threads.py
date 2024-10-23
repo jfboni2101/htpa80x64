@@ -99,6 +99,10 @@ class Imshow(RThread):
         self.window_name = kwargs.pop('window_name', 'Sensor stream')
         self.cap = cv2.VideoCapture(0)
 
+        # Create an initial weight for blending
+        self.alpha = 0.3  # Initial weight for thermal camera
+        self.beta = 0.7   # Initial weight for RGB camera
+
         # Call parent class
         super().__init__(target=self._target_function,
                          read_buffer=read_buffer,
@@ -128,13 +132,17 @@ class Imshow(RThread):
         except:
             bboxes = pd.DataFrame(data=[])
 
-        # print('Executed plot thread \n')
-
         return frame, bboxes
 
-    def run(self):
+    def on_trackbar(self, value):
+        """Callback function for trackbar to adjust the alpha and beta."""
+        self.alpha = value / 100.0
+        self.beta = 1.0 - self.alpha
 
+    def run(self):
         cv2.namedWindow(self.window_name, cv2.WINDOW_NORMAL)
+        cv2.createTrackbar('Blend', self.window_name, 30, 100, self.on_trackbar)  # Trackbar starts at 30%
+
         model = YOLO("yolov8n.pt")
         while self._exit == False:
 
@@ -169,8 +177,8 @@ class Imshow(RThread):
             result = model.track(frame2, persist=True)
             annotated_frame = result[0].plot()
 
-            # Overlaid frame of thermal camera and normal camera
-            overlaid_frame = cv2.addWeighted(frame1, 0.3, annotated_frame, 0.7, 0)
+            # Overlaid frame of thermal camera and normal camera with adjustable blending
+            overlaid_frame = cv2.addWeighted(frame1, self.alpha, annotated_frame, self.beta, 0)
             cv2.imshow(self.window_name, overlaid_frame)
             cv2.waitKey(1)
 
@@ -180,6 +188,5 @@ class Imshow(RThread):
         if self._exit == True:
             cv2.destroyWindow(self.window_name)
 
-        def stop(self):
-
-            self._exit = True
+    def stop(self):
+        self._exit = True
